@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Attendees Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-width: 140px;
+            flex: 1 1 auto;
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .filters {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .attending-yes {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .attending-no {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .call-failed {
+            color: #ff9800;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        /* Tablet and smaller screens */
+        @media (max-width: 1024px) {
+            .container {
+                margin: 10px;
+            }
+
+            .stats {
+                gap: 12px;
+            }
+
+            .stat-card {
+                min-width: 120px;
+                padding: 12px;
+            }
+
+            .stat-card h3 {
+                font-size: 1.6em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .filters {
+                gap: 8px;
+            }
+
+            .filter-btn {
+                padding: 8px 16px;
+                font-size: 0.85em;
+            }
+        }
+
+        /* Mobile devices */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                margin: 0;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .stat-card {
+                min-width: 100%;
+                padding: 12px;
+            }
+
+            .stat-card h3 {
+                font-size: 1.8em;
+            }
+
+            .stat-card p {
+                font-size: 0.85em;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .filters {
+                gap: 6px;
+                margin-bottom: 15px;
+                flex-wrap: wrap;
+            }
+
+            .filter-btn {
+                padding: 8px 14px;
+                font-size: 0.8em;
+                flex: 1 1 calc(50% - 3px);
+                min-width: calc(50% - 3px);
+            }
+
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                font-size: 0.85em;
+                min-width: 100%;
+            }
+
+            th {
+                padding: 10px 8px;
+                font-size: 0.75em;
+                white-space: nowrap;
+            }
+
+            td {
+                padding: 10px 8px;
+                font-size: 0.85em;
+            }
+
+            .loading {
+                padding: 30px 20px;
+                font-size: 0.9em;
+            }
+
+            .error {
+                padding: 12px;
+                font-size: 0.85em;
+            }
+        }
+
+        /* Small mobile devices */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .header p {
+                font-size: 0.85em;
+            }
+
+            .stats {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .stat-card h3 {
+                font-size: 1.5em;
+            }
+
+            .stat-card p {
+                font-size: 0.8em;
+            }
+
+            .content {
+                padding: 12px;
+            }
+
+            .filters {
+                gap: 5px;
+            }
+
+            .filter-btn {
+                padding: 7px 10px;
+                font-size: 0.75em;
+                flex: 1 1 100%;
+                min-width: 100%;
+            }
+
+            table {
+                font-size: 0.8em;
+            }
+
+            th {
+                padding: 8px 6px;
+                font-size: 0.7em;
+            }
+
+            td {
+                padding: 8px 6px;
+                font-size: 0.8em;
+            }
+
+            .loading {
+                padding: 25px 15px;
+                font-size: 0.85em;
+            }
+        }
+
+        /* Landscape orientation for mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .stats {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .stat-card {
+                flex: 1 1 calc(33.333% - 10px);
+                min-width: calc(33.333% - 10px);
+            }
+
+            .filter-btn {
+                flex: 1 1 calc(33.333% - 4px);
+                min-width: calc(33.333% - 4px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Event Attendees</h1>
+            <p>View all registered attendees and their status</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h3 id="total-count">-</h3>
+                <p>Total Attendees</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="attending-count">-</h3>
+                <p>Attending</p>
+            </div>
+            <div class="stat-card" id="not-attending-card" style="display: none;">
+                <h3 id="not-attending-count">-</h3>
+                <p>Not Attending</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="busy-count">-</h3>
+                <p>Busy</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="voicemail-count">-</h3>
+                <p>Voicemail</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="no-answer-count">-</h3>
+                <p>No Answer</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="call-failed-count">-</h3>
+                <p>Call Failed</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterAttendees('all')">All</button>
+                <button class="filter-btn" onclick="filterAttendees('attending')">Attending</button>
+                <button class="filter-btn" onclick="filterAttendees('not_attending')">Not Attending</button>
+                <button class="filter-btn" onclick="filterAttendees('busy')">Busy</button>
+                <button class="filter-btn" onclick="filterAttendees('voicemail')">Voicemail</button>
+                <button class="filter-btn" onclick="filterAttendees('no_answer')">No Answer</button>
+                <button class="filter-btn" onclick="filterAttendees('call_failed')">Call Failed</button>
+            </div>
+
+            <div class="table-container">
+                <div id="loading" class="loading">Loading attendees...</div>
+                <div id="error" class="error" style="display: none;"></div>
+                <table id="attendees-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendees-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration -->
+    <script src="config.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
+    <script>
+        // Initialize Supabase client from config
+        // Access the Supabase library from the global scope
+        const supabaseLib = window.supabase || supabase;
+        const supabaseClient = supabaseLib.createClient(
+            SUPABASE_CONFIG.url, 
+            SUPABASE_CONFIG.anonKey
+        );
+        
+        let allAttendees = [];
+        let currentFilter = 'all';
+
+        /**
+         * Maps sentiment value to status category based on actual table values.
+         * 
+         * @param {string} sentiment - The sentiment value from the database
+         * @returns {string} Status category (attending, not_attending, busy, voicemail, call_failed)
+         */
+        function mapSentimentToStatus(sentiment) {
+            if (!sentiment) return 'no_answer';
+            
+            const sentimentLower = sentiment.toLowerCase().trim();
+            
+            // IMPORTANT: Check "not attending" FIRST before "attending"
+            // because "not attending the party" contains "attending the party" as substring
+            if (sentimentLower === 'not attending the party' || 
+                sentimentLower.includes('not attending the party')) {
+                return 'not_attending';
+            }
+            
+            // Exact match for "attending the party" (after checking "not attending")
+            if (sentimentLower === 'attending the party' || 
+                sentimentLower.includes('attending the party')) {
+                return 'attending';
+            }
+            
+            // Exact match for "busy"
+            if (sentimentLower === 'busy') {
+                return 'busy';
+            }
+            
+            // Exact match for "voicemail"
+            if (sentimentLower === 'voicemail') {
+                return 'voicemail';
+            }
+            
+            // Match for "no-answer" or "no answer" (with hyphen or space)
+            if (sentimentLower === 'no-answer' || 
+                sentimentLower === 'no answer' ||
+                sentimentLower.includes('no-answer') ||
+                sentimentLower.includes('no answer')) {
+                return 'no_answer';
+            }
+            
+            // Match for "Outgoing calls are not working for this contact."
+            if (sentimentLower.includes('outgoing calls are not working') ||
+                sentimentLower.includes('outgoing calls') ||
+                sentimentLower.includes('not working for this contact')) {
+                return 'call_failed';
+            }
+            
+            // Default to no_answer if sentiment doesn't match any category
+            return 'no_answer';
+        }
+
+        /**
+         * Loads contacts from Supabase and processes them.
+         */
+        async function loadAttendees() {
+            try {
+                // Fetch all contacts from Supabase
+                const { data, error } = await supabaseClient
+                    .from('contacts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    throw new Error(`Supabase error: ${error.message}`);
+                }
+                
+                if (!data) {
+                    throw new Error('No data returned from Supabase');
+                }
+                
+                // Transform Supabase data to match expected format
+                allAttendees = data.map(contact => {
+                    const status = mapSentimentToStatus(contact.sentiment);
+                    return {
+                        id: contact.id,
+                        name: contact.name || 'Unknown',
+                        contact: contact.phone_nu || contact.phone_number || 'N/A',
+                        sentiment: contact.sentiment || 'No response',
+                        status: status,
+                        attending: status === 'attending' ? 'yes' : (status === 'not_attending' ? 'no' : 'unknown'),
+                        gender: contact.gender,
+                        last_called: contact.last_called,
+                        created_at: contact.created_at,
+                        updated_at: contact.updated_at
+                    };
+                });
+                
+                // Calculate and display stats
+                calculateAndDisplayStats();
+                
+                // Display attendees
+                displayAttendees(allAttendees);
+                
+                // Hide loading, show table
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('attendees-table').style.display = 'table';
+            } catch (error) {
+                console.error('Error loading attendees:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Error loading attendees: ' + error.message;
+            }
+        }
+
+        /**
+         * Calculates statistics from attendees data and updates the UI.
+         */
+        function calculateAndDisplayStats() {
+            const stats = {
+                total: allAttendees.length,
+                attending: 0,
+                not_attending: 0,
+                busy: 0,
+                voicemail: 0,
+                no_answer: 0,
+                call_failed: 0
+            };
+            
+            allAttendees.forEach(attendee => {
+                switch (attendee.status) {
+                    case 'attending':
+                        stats.attending++;
+                        break;
+                    case 'not_attending':
+                        stats.not_attending++;
+                        break;
+                    case 'busy':
+                        stats.busy++;
+                        break;
+                    case 'voicemail':
+                        stats.voicemail++;
+                        break;
+                    case 'no_answer':
+                        stats.no_answer++;
+                        break;
+                    case 'call_failed':
+                        stats.call_failed++;
+                        break;
+                }
+            });
+            
+            // Update UI with stats
+            document.getElementById('total-count').textContent = stats.total;
+            document.getElementById('attending-count').textContent = stats.attending;
+            
+            // Show/hide "Not Attending" card based on count
+            const notAttendingCard = document.getElementById('not-attending-card');
+            if (stats.not_attending > 0) {
+                notAttendingCard.style.display = 'block';
+                document.getElementById('not-attending-count').textContent = stats.not_attending;
+            } else {
+                notAttendingCard.style.display = 'none';
+            }
+            
+            document.getElementById('busy-count').textContent = stats.busy;
+            document.getElementById('voicemail-count').textContent = stats.voicemail;
+            document.getElementById('no-answer-count').textContent = stats.no_answer;
+            document.getElementById('call-failed-count').textContent = stats.call_failed;
+        }
+
+        /**
+         * Displays attendees in the table.
+         * 
+         * @param {Array} attendees - Array of attendee objects to display
+         */
+        function displayAttendees(attendees) {
+            const tbody = document.getElementById('attendees-tbody');
+            tbody.innerHTML = '';
+
+            if (attendees.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: #6c757d;">No attendees found</td></tr>';
+                return;
+            }
+
+            attendees.forEach(attendee => {
+                const row = document.createElement('tr');
+                const sentiment = attendee.sentiment || 'No response';
+                
+                // Determine status class based on status
+                let statusClass = '';
+                if (attendee.status === 'attending') {
+                    statusClass = 'attending-yes';
+                } else if (attendee.status === 'not_attending') {
+                    statusClass = 'attending-no';
+                } else if (attendee.status === 'call_failed') {
+                    statusClass = 'call-failed';
+                }
+
+                row.innerHTML = `
+                    <td>${escapeHtml(attendee.name)}</td>
+                    <td>${escapeHtml(attendee.contact)}</td>
+                    <td class="${statusClass}">${escapeHtml(sentiment)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        /**
+         * Filters attendees based on status.
+         * 
+         * @param {string} filter - Filter type ('all', 'attending', 'not_attending', 'busy', 'voicemail', 'no_answer', 'call_failed')
+         */
+        function filterAttendees(filter) {
+            currentFilter = filter;
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            let filtered = allAttendees;
+            
+            if (filter === 'all') {
+                // Show all attendees
+                filtered = allAttendees;
+            } else if (filter === 'attending') {
+                // Filter for attending status
+                filtered = allAttendees.filter(a => a.status === 'attending');
+            } else if (filter === 'not_attending') {
+                // Filter for not attending status
+                filtered = allAttendees.filter(a => a.status === 'not_attending');
+            } else if (filter === 'busy') {
+                // Filter for busy status
+                filtered = allAttendees.filter(a => a.status === 'busy');
+            } else if (filter === 'voicemail') {
+                // Filter for voicemail status
+                filtered = allAttendees.filter(a => a.status === 'voicemail');
+            } else if (filter === 'no_answer') {
+                // Filter for no answer status
+                filtered = allAttendees.filter(a => a.status === 'no_answer');
+            } else if (filter === 'call_failed') {
+                // Filter for call failed status
+                filtered = allAttendees.filter(a => a.status === 'call_failed');
+            }
+
+            displayAttendees(filtered);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', loadAttendees);
+    </script>
+</body>
+</html>
